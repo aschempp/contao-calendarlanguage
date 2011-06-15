@@ -54,6 +54,19 @@ class CalendarLanguage extends Frontend
         	}
         }
         
+        if ($this->Input->get('day') != '')
+		{
+			$arrGet['get']['day'] = $this->Input->get('day');
+		}
+		elseif ($this->Input->get('month') != '')
+		{
+			$arrGet['get']['month'] = $this->Input->get('month');
+		}
+		elseif ($this->Input->get('year') != '')
+		{
+			$arrGet['get']['year'] = $this->Input->get('year');
+		}
+        
 		return $arrGet;
 	}
 }
