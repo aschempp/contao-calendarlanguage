@@ -29,4 +29,3 @@
 
 
 $GLOBALS['TL_HOOKS']['translateUrlParameters'][] = array('CalendarLanguage', 'translateUrlParameters');
-

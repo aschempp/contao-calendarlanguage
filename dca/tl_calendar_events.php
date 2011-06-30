@@ -68,17 +68,26 @@ class tl_calendarlanguage_events extends Backend
 			
 			if ($objItems->numRows)
 			{
+				$intTimestampToday = strtotime('tomorrow');
 				while( $objItems->next() )
 				{
-					$arrItems[$objItems->id] = $objItems->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objItems->startTime) . ')';
+					if ($objItems->startTime < $intTimestampToday)
+					{
+						$arrItems[$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_today']][$objItems->id] = $objItems->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objItems->startTime) . ')';
+					}
+					else
+					{
+						$arrItems[$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_other']][$objItems->id] = $objItems->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objItems->startTime) . ')';
+					}
 				}
 			}
 		}
-		
+
+		// maybe implement a sorting
 		return $arrItems;
 	}
-	
-		
+
+
 	public function showSelectbox(DataContainer $dc)
 	{
 		if($this->Input->get('act') == "edit")

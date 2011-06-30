@@ -29,4 +29,7 @@
 
 
 $GLOBALS['TL_LANG']['tl_calendar_events']['languageMain'] = array('Mainevent', 'Please define the master event to allow language switching.');
+$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_today'] = 'Events today';
+$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_other'] = 'other events';
 
+?>
