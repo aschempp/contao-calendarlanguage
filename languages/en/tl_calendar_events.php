@@ -31,7 +31,7 @@
 /** 
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_calendar_events']['languageMain'] = array('Mainevent', 'Please define the master event to allow language switching.');
+$GLOBALS['TL_LANG']['tl_calendar_events']['languageMain'] = array('Main event', 'Please define the master event to allow language switching.');
 
 
 /**

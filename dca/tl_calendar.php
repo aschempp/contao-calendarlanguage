@@ -42,6 +42,7 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['format']['eval']['tl_class'] = 'clr
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['master'] = array
 (
 	'label'				=> &$GLOBALS['TL_LANG']['tl_calendar']['master'],
+	'exclude'			=> true,
 	'inputType'			=> 'select',
 	'options_callback'	=> array('tl_calendarlanguage', 'getCalendars'),
 	'eval'				=> array('includeBlankOption'=>true, 'blankOptionLabel'=>&$GLOBALS['TL_LANG']['tl_calendar']['isMaster']),

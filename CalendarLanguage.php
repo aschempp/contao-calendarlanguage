@@ -31,6 +31,15 @@
 class CalendarLanguage extends Frontend
 {
 	
+	/**
+	 * Translate the URL parameters using the changelanguage module hook
+	 *
+	 * @param	array
+	 * @param	string
+	 * @param	array
+	 * @return	array
+	 * @see		ModuleChangeLanguage::compile()
+	 */
 	public function translateUrlParameters($arrGet, $strLanguage, $arrRootPage)
 	{
 		$strEvent = $this->Input->get('events');

@@ -65,18 +65,15 @@ class tl_calendarlanguage_events extends Backend
 		$arrEvents = array($sameDay => array(), $otherDay => array());
 		$objEvents = $this->Database->prepare("SELECT * FROM tl_calendar_events WHERE pid=(SELECT tl_calendar.master FROM tl_calendar LEFT OUTER JOIN tl_calendar_events ON tl_calendar_events.pid=tl_calendar.id WHERE tl_calendar_events.id={$dc->id} AND tl_calendar.master > 0) ORDER BY startTime DESC")->execute($objCalendar->master);
 		
-		if ($objEvents->numRows)
+		while( $objEvents->next() )
 		{
-			while( $objEvents->next() )
+			if ($objEvents->startDate == $dc->activeRecord->startDate)
 			{
-				if ($objEvents->startDate == $dc->activeRecord->startDate)
-				{
-					$arrEvents[$sameDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
-				}
-				else
-				{
-					$arrEvents[$otherDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
-				}
+				$arrEvents[$sameDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
+			}
+			else
+			{
+				$arrEvents[$otherDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
 			}
 		}
 
