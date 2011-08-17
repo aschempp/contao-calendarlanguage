@@ -28,7 +28,15 @@
  */
 
 
+/**
+ * Fields
+ */
 $GLOBALS['TL_LANG']['tl_calendar_events']['languageMain'] = array('Hauptevent', 'Bitte wählen Sie das Event im Hauptkalender welcher diesem entspricht.');
-$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_today'] = 'Events heute';
-$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_other'] = 'restliche Events';
-?>
+
+
+/**
+ * References
+ */
+$GLOBALS['TL_LANG']['tl_calendar_events']['sameDay']	= 'Am selben Tag';
+$GLOBALS['TL_LANG']['tl_calendar_events']['otherDay']	= 'An anderen Tagen';
+

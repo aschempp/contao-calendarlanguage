@@ -28,7 +28,15 @@
  */
 
 
-// Field
+/**
+ * Config
+ */
+$GLOBALS['TL_DCA']['tl_calendar_events']['config']['onload_callback'][] = array('tl_calendarlanguage_events', 'showSelectbox');
+
+
+/**
+ * Fields
+ */
 $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['languageMain'] = array
 (
 	'label'                   => &$GLOBALS['TL_LANG']['tl_calendar_events']['languageMain'],
@@ -38,65 +46,58 @@ $GLOBALS['TL_DCA']['tl_calendar_events']['fields']['languageMain'] = array
 	'eval'					  => array('includeBlankOption'=>true, 'tl_class'=>'w50'),
 );
 
-// Palette 
-$GLOBALS['TL_DCA']['tl_calendar_events']['config']['onload_callback'][] = array('tl_calendarlanguage_events', 'showSelectbox');
-
-
 
 class tl_calendarlanguage_events extends Backend 
 {
+
+	/**
+	 * Get records from the master calendar
+	 *
+	 * @param	DataContainer
+	 * @return	array
+	 * @link	http://www.contao.org/callbacks.html#options_callback
+	 */
 	public function getMasterCalendar(DataContainer $dc)
 	{
-		// Handle "edit all" option
-		if ($this->Input->get('act') == 'editAll')
-		{
-			if (!is_array($GLOBALS['languageMain_IDS']))
-			{
-				$ids = $this->Session->get('CURRENT');
-				$GLOBALS['languageMain_IDS'] = $ids['IDS'];
-			}
-			$this->Input->setGet('id', array_shift($GLOBALS['languageMain_IDS']));
-		}
-		
-		
-		$arrItems = array();
-		$objCalendar = $this->Database->prepare("SELECT tl_calendar.master FROM tl_calendar LEFT OUTER JOIN tl_calendar_events ON tl_calendar_events.pid=tl_calendar.id WHERE tl_calendar_events.id=?")->execute($dc->id);
-		
-		if ($objCalendar->numRows && $objCalendar->master > 0)
-		{
-			$objItems = $this->Database->prepare("SELECT title,startTime,id FROM tl_calendar_events WHERE pid=? ORDER BY startTime DESC")->execute($objCalendar->master);
+		$sameDay = $GLOBALS['TL_LANG']['tl_calendar_events']['sameDay'];
+		$otherDay = $GLOBALS['TL_LANG']['tl_calendar_events']['otherDay'];
 			
-			if ($objItems->numRows)
+		$arrEvents = array($sameDay => array(), $otherDay => array());
+		$objEvents = $this->Database->prepare("SELECT * FROM tl_calendar_events WHERE pid=(SELECT tl_calendar.master FROM tl_calendar LEFT OUTER JOIN tl_calendar_events ON tl_calendar_events.pid=tl_calendar.id WHERE tl_calendar_events.id={$dc->id} AND tl_calendar.master > 0) ORDER BY startTime DESC")->execute($objCalendar->master);
+		
+		if ($objEvents->numRows)
+		{
+			while( $objEvents->next() )
 			{
-				$intTimestampToday = strtotime('tomorrow');
-				while( $objItems->next() )
+				if ($objEvents->startDate == $dc->activeRecord->startDate)
 				{
-					if ($objItems->startTime < $intTimestampToday)
-					{
-						$arrItems[$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_today']][$objItems->id] = $objItems->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objItems->startTime) . ')';
-					}
-					else
-					{
-						$arrItems[$GLOBALS['TL_LANG']['tl_calendar_events']['events_cl_other']][$objItems->id] = $objItems->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objItems->startTime) . ')';
-					}
+					$arrEvents[$sameDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
+				}
+				else
+				{
+					$arrEvents[$otherDay][$objEvents->id] = $objEvents->title . ' (' . $this->parseDate($GLOBALS['TL_CONFIG']['datimFormat'], $objEvents->startTime) . ')';
 				}
 			}
 		}
 
-		// maybe implement a sorting
-		return $arrItems;
+		return $arrEvents;
 	}
 
 
+	/**
+	 * Show the select menu only on slave calendars
+	 *
+	 * @param	DataContainer
+	 * @return	void
+	 * @link	http://www.contao.org/callbacks.html#onload_callback
+	 */
 	public function showSelectbox(DataContainer $dc)
 	{
 		if($this->Input->get('act') == "edit")
 		{
-			$objCalendar = $this->Database->prepare("SELECT tl_calendar.* FROM tl_calendar LEFT OUTER JOIN tl_calendar_events ON tl_calendar_events.pid=tl_calendar.id WHERE tl_calendar_events.id=?")
-										 ->limit(1)
-										 ->execute($dc->id);
+			$objCalendar = $this->Database->execute("SELECT tl_calendar.* FROM tl_calendar LEFT OUTER JOIN tl_calendar_events ON tl_calendar_events.pid=tl_calendar.id WHERE tl_calendar_events.id=".$dc->id);
 
-			if($objCalendar->numRows && $objCalendar->master > 0)
+			if ($objCalendar->numRows && $objCalendar->master > 0)
 			{
 				$GLOBALS['TL_DCA']['tl_calendar_events']['palettes']['default'] = preg_replace('@([,|;])(alias[,|;])@','$1languageMain,$2', $GLOBALS['TL_DCA']['tl_calendar_events']['palettes']['default']);
 				$GLOBALS['TL_DCA']['tl_calendar_events']['fields']['title']['eval']['tl_class'] = 'w50';

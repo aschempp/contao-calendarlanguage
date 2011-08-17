@@ -28,8 +28,17 @@
  */
 
 
+/**
+ * Palettes
+ */
+$GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'] = str_replace('title,', 'title,language,master,', $GLOBALS['TL_DCA']['tl_calendar']['palettes']['default']);
+$GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['makeFeed'] = str_replace(',language,', ',', $GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['makeFeed']);
+$GLOBALS['TL_DCA']['tl_calendar']['fields']['format']['eval']['tl_class'] = 'clr';
 
-// Fields
+
+/**
+ * Fields
+ */
 $GLOBALS['TL_DCA']['tl_calendar']['fields']['master'] = array
 (
 	'label'				=> &$GLOBALS['TL_LANG']['tl_calendar']['master'],
@@ -39,26 +48,23 @@ $GLOBALS['TL_DCA']['tl_calendar']['fields']['master'] = array
 );
 
 
-// Palettes
-$GLOBALS['TL_DCA']['tl_calendar']['palettes']['default'] = str_replace('title,', 'title,language,master,', $GLOBALS['TL_DCA']['tl_calendar']['palettes']['default']);
-$GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['makeFeed'] = str_replace(',language,', ',', $GLOBALS['TL_DCA']['tl_calendar']['subpalettes']['makeFeed']);
-$GLOBALS['TL_DCA']['tl_calendar']['fields']['format']['eval']['tl_class'] = 'clr';
-
-
-
-
 class tl_calendarlanguage extends Backend
 {
+
+	/**
+	 * Get an array of possible calendars
+	 *
+	 * @param	DataContainer
+	 * @return	array
+	 * @link	http://www.contao.org/callbacks.html#options_callback
+	 */
 	public function getCalendars(DataContainer $dc)
 	{
 		$arrCalendars = array();
-		$objCalendars = $this->Database->prepare("SELECT * FROM tl_calendar WHERE language!=? ORDER BY title")->execute($dc->activeRecord->language);
+		$objCalendars = $this->Database->prepare("SELECT * FROM tl_calendar WHERE language!=? AND id!=? AND master=0 ORDER BY title")->execute($dc->activeRecord->language, $dc->id);
 		
 		while($objCalendars->next())
 		{
-			if ($objCalendars->id == $dc->id || $objCalendars->master > 0)
-				continue;
-				
 			$arrCalendars[$objCalendars->id] = sprintf($GLOBALS['TL_LANG']['tl_calendar']['isSlave'], $objCalendars->title);
 		}
 		
