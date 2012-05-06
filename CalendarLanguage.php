@@ -42,6 +42,17 @@ class CalendarLanguage extends Frontend
 	 */
 	public function translateUrlParameters($arrGet, $strLanguage, $arrRootPage)
 	{
+        if (!(isset($_GET['events']) || ($GLOBALS['TL_CONFIG']['useAutoItem'] && isset($_GET['auto_item']))))
+        {
+            return $arrGet;
+        }
+
+        // Set the item from the auto_item parameter
+        if ($GLOBALS['TL_CONFIG']['useAutoItem'] && isset($_GET['auto_item']))
+        {
+            $this->Input->setGet('events', $this->Input->get('auto_item'));
+        }
+
 		$strEvent = $this->Input->get('events');
 		
 		// Switch news item language
