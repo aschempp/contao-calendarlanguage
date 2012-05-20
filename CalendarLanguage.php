@@ -47,14 +47,69 @@ class CalendarLanguage extends Frontend
             return $arrGet;
         }
 
-        // Set the item from the auto_item parameter
-        if ($GLOBALS['TL_CONFIG']['useAutoItem'] && isset($_GET['auto_item']))
-        {
-            $this->Input->setGet('events', $this->Input->get('auto_item'));
-        }
-
-		$strEvent = $this->Input->get('events');
+		global $objPage;
 		
+		// try to find the page(s) wich holds eventreader or eventlist modules as content elements
+		$objPageId = $this->Database->prepare('
+			SELECT page.id
+			FROM tl_content content
+			LEFT JOIN tl_article article ON article.id=content.pid
+			LEFT JOIN tl_page page ON page.id=article.pid
+			WHERE content.type="module"
+			AND (content.module IN (SELECT id FROM tl_module WHERE type=?) OR content.module IN (SELECT id FROM tl_module WHERE type=? AND cal_readerModule > 0))
+			AND content.invisible<>1
+			AND article.published=1
+			AND page.published=1')
+				->execute('eventreader', 'eventlist');
+
+		if ($objPageId->numRows == 0)
+		{
+			// if nothing is found and the page has it's own layout then we will try to find modules in layout
+			if ($objPage->includeLayout)
+			{
+				// get modules id
+				$objModules = $this->Database->prepare('SELECT id FROM tl_module WHERE type=? OR type=?')->execute('eventreader', 'eventlist');
+
+				$arrLike = array();
+
+				while ($objModules->next())
+				{
+					$arrLike[] = 'modules LIKE \'%"' . $objModules->id . '"%\'';
+				}
+
+				// try to find modules in layout
+				$objLayout = $this->Database->prepare('SELECT * FROM tl_layout WHERE id=? AND (' . implode(' OR ', $arrLike) . ')')
+						->limit(1)
+						->execute($objPage->layout);
+
+				// if nothing is found then do nothing
+				if ($objLayout->numRows == 0)
+				{
+					return $arrGet;
+				}
+			}
+			else
+			{
+				return $arrGet;
+			}
+		}
+		else
+		{
+			// if we found pages
+			$arrPageId = array();
+
+			while ($objPageId->next())
+			{
+				$arrPageId[] = $objPageId->id;
+			}
+
+			// if current page id is not in array of page ids then do nothing
+			if (!in_array($objPage->id, $arrPageId)) return $arrGet;
+		}
+
+        // Set the item from the auto_item parameter
+		$strEvent = $this->Input->get($GLOBALS['TL_CONFIG']['useAutoItem'] && isset($_GET['auto_item']) ? 'auto_item' : 'events');
+
 		// Switch news item language
         if ($strEvent != '')
         {
