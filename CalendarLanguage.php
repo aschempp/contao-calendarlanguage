@@ -47,8 +47,36 @@ class CalendarLanguage extends Frontend
             return $arrGet;
         }
 
+		// get modules
+		$objModules = $this->Database->prepare('SELECT id FROM tl_module WHERE type=? OR (type=? AND cal_readerModule > 0)')
+				->execute('eventreader', 'eventlist');
+
+		if ($objModules->numRows == 0) return $arrGet;
+
+		$arrModules = array();
+
+		while ($objModules->next())
+		{
+			$arrModules[] = $objModules->id;
+		}
+
+		// if z_modulealias is active and in use
+		if (in_array('z_modulealias', Config::getInstance()->getActiveModules()))
+		{
+			$objAliasModules = $this->Database->prepare('SELECT id FROM tl_module WHERE type=? AND ' . $this->getLikeCommand($arrModules, 'aliasModules'))
+					->execute('modulealias');
+
+			if ($objAliasModules->numRows)
+			{
+				while ($objAliasModules->next())
+				{
+					$arrModules[] = $objAliasModules->id;
+				}
+			}
+		}
+
 		global $objPage;
-		
+
 		// try to find the page(s) wich holds eventreader or eventlist modules as content elements
 		$objPageId = $this->Database->prepare('
 			SELECT page.id
@@ -56,29 +84,19 @@ class CalendarLanguage extends Frontend
 			LEFT JOIN tl_article article ON article.id=content.pid
 			LEFT JOIN tl_page page ON page.id=article.pid
 			WHERE content.type="module"
-			AND (content.module IN (SELECT id FROM tl_module WHERE type=?) OR content.module IN (SELECT id FROM tl_module WHERE type=? AND cal_readerModule > 0))
+			AND content.module IN (' . implode(',', $arrModules) . ')
 			AND content.invisible<>1
 			AND article.published=1
 			AND page.published=1')
-				->execute('eventreader', 'eventlist');
+				->execute();
 
 		if ($objPageId->numRows == 0)
 		{
 			// if nothing is found and the page has it's own layout then we will try to find modules in layout
 			if ($objPage->includeLayout)
 			{
-				// get modules id
-				$objModules = $this->Database->prepare('SELECT id FROM tl_module WHERE type=? OR type=?')->execute('eventreader', 'eventlist');
-
-				$arrLike = array();
-
-				while ($objModules->next())
-				{
-					$arrLike[] = 'modules LIKE \'%"' . $objModules->id . '"%\'';
-				}
-
 				// try to find modules in layout
-				$objLayout = $this->Database->prepare('SELECT * FROM tl_layout WHERE id=? AND (' . implode(' OR ', $arrLike) . ')')
+				$objLayout = $this->Database->prepare('SELECT * FROM tl_layout WHERE id=? AND ' . $this->getLikeCommand($arrModules, 'modules'))
 						->limit(1)
 						->execute($objPage->layout);
 
@@ -143,6 +161,26 @@ class CalendarLanguage extends Frontend
 		}
         
 		return $arrGet;
+	}
+
+
+	/**
+	 * Return MySQL LIKE command
+	 *
+	 * @param array
+	 * @param string
+	 * @return string
+	 */
+	private function getLikeCommand($arrModules, $strField)
+	{
+		$arrLike = array();
+
+		foreach ($arrModules as $id)
+		{
+			$arrLike[] = $strField . ' LIKE \'%"' . $id . '"%\'';
+		}
+
+		return '(' . implode(' OR ', $arrLike) . ')';
 	}
 }
 
